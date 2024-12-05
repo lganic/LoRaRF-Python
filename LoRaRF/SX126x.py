@@ -1189,7 +1189,8 @@ class SX126x(BaseLoRa) :
 
     def getRxBufferStatus(self) -> tuple :
         buf = self._readBytes(0x13, 3)
-        return buf[1:3]
+        # return buf[1:3]
+        return [buf[0], buf[2] - buf[1]]
 
     def getPacketStatus(self) -> tuple :
         buf = self._readBytes(0x14, 4)
