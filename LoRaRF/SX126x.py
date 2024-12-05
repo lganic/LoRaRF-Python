@@ -2,6 +2,7 @@ from .base import LoRaSpi, LoRaGpio, BaseLoRa
 from typing import Optional
 import time
 from threading import Thread
+from typing import List
 
 class SX126x(BaseLoRa) :
     """Class for SX1261/62/68 and LLCC68 LoRa chipsets from Semtech"""
@@ -275,7 +276,7 @@ class SX126x(BaseLoRa) :
     _onTransmit = None
     _onReceive = None
 
-    def __init__(self, spi: LoRaSpi, cs: LoRaGpio, reset: LoRaGpio, busy: LoRaGpio, irq: Optional[LoRaGpio]=None, txen: Optional[LoRaGpio]=None, rxen: Optional[LoRaGpio]=None):
+    def __init__(self, spi: LoRaSpi, cs: LoRaGpio, reset: LoRaGpio, busy: LoRaGpio, address: int, irq: Optional[LoRaGpio]=None, txen: Optional[LoRaGpio]=None, rxen: Optional[LoRaGpio]=None):
 
         self._spi = spi
         self._cs = cs
@@ -284,6 +285,8 @@ class SX126x(BaseLoRa) :
         self._irq = irq
         self._txen = txen
         self._rxen = rxen
+
+        self.address = address # Keep track of the address of this device
 
 ### COMMON OPERATIONAL METHODS ###
 
@@ -662,6 +665,32 @@ class SX126x(BaseLoRa) :
         self.writeBuffer(self._bufferIndex, data, length)
         self._bufferIndex = (self._bufferIndex + length) % 256
         self._payloadTxRx += length
+    
+    def send(self, data: List[int], address):
+        '''
+        Send a some data to a specified address. 
+        '''
+
+        if address <0 or address >= 65536:
+            raise ValueError(f'Address not in range: {address}')
+
+        # Split address into high and low bytes
+        high_byte = (address >> 8) & 0xFF
+        low_byte = address & 0xFF
+
+        data = [len(data), high_byte, low_byte]
+
+        length = len(data)
+
+        self.beginPacket()
+
+        self.write(data, len(data))
+
+        self.endPacket()
+
+        # Wait until modulation process for transmitting packet finish
+        self.wait()
+
 
     def put(self, data) :
 
@@ -1190,7 +1219,19 @@ class SX126x(BaseLoRa) :
     def getRxBufferStatus(self) -> tuple :
         buf = self._readBytes(0x13, 3)
         # return buf[1:3]
-        return [buf[0], buf[2] - buf[1]]
+
+        packet_start_index = buf[1]
+        self._bufferIndex = packet_start_index
+
+        packet_length = self.read()
+
+        packet_address = self.read(2)
+
+        #TODO: Check packet address
+
+        return packet_length, (self._bufferIndex + 3) % 0xFF
+
+        # return [buf[0], buf[2] - buf[1]]
 
     def getPacketStatus(self) -> tuple :
         buf = self._readBytes(0x14, 4)
