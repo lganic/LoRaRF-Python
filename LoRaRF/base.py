@@ -32,7 +32,7 @@ class LoRaGpio:
         self.offset = offset
 
     def output(self, value: int):
-        chip = gpiod.chip(self.chip)
+        chip = gpiod.Chip(self.chip)
         line = chip.get_line(self.offset)
         try:
             line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_DIR_OUT)
@@ -43,7 +43,7 @@ class LoRaGpio:
             chip.close()
 
     def input(self) -> int:
-        chip = gpiod.chip(self.chip)
+        chip = gpiod.Chip(self.chip)
         line = chip.get_line(self.offset)
         try:
             line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_DIR_IN)
@@ -56,7 +56,7 @@ class LoRaGpio:
 
     def monitor(self, callback, timeout: float):
         seconds = int(timeout)
-        chip = gpiod.chip(self.chip)
+        chip = gpiod.Chip(self.chip)
         line = chip.get_line(self.offset)
         try:
             line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_EV_RISING_EDGE)
@@ -70,7 +70,7 @@ class LoRaGpio:
     def monitor_continuous(self, callback, timeout: float):
         seconds = int(timeout)
         while True:
-            chip = gpiod.chip(self.chip)
+            chip = gpiod.Chip(self.chip)
             line = chip.get_line(self.offset)
             try:
                 line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_EV_RISING_EDGE)
