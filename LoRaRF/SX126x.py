@@ -678,7 +678,7 @@ class SX126x(BaseLoRa) :
         high_byte = (address >> 8) & 0xFF
         low_byte = address & 0xFF
 
-        data = [len(data), high_byte, low_byte]
+        data = [len(data), high_byte, low_byte] + data
 
         length = len(data)
 
