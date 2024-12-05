@@ -2,7 +2,6 @@ import spidev
 import gpiod
 from typing import Iterable
 
-
 class LoRaSpi():
 
     SPI_SPEED = 8000000
@@ -33,7 +32,7 @@ class LoRaGpio:
         self.offset = offset
 
     def output(self, value: int):
-        chip = gpiod.Chip(self.chip)
+        chip = gpiod.chip(self.chip)
         line = chip.get_line(self.offset)
         try:
             line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_DIR_OUT)
@@ -44,7 +43,7 @@ class LoRaGpio:
             chip.close()
 
     def input(self) -> int:
-        chip = gpiod.Chip(self.chip)
+        chip = gpiod.chip(self.chip)
         line = chip.get_line(self.offset)
         try:
             line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_DIR_IN)
@@ -57,7 +56,7 @@ class LoRaGpio:
 
     def monitor(self, callback, timeout: float):
         seconds = int(timeout)
-        chip = gpiod.Chip(self.chip)
+        chip = gpiod.chip(self.chip)
         line = chip.get_line(self.offset)
         try:
             line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_EV_RISING_EDGE)
@@ -71,7 +70,7 @@ class LoRaGpio:
     def monitor_continuous(self, callback, timeout: float):
         seconds = int(timeout)
         while True:
-            chip = gpiod.Chip(self.chip)
+            chip = gpiod.chip(self.chip)
             line = chip.get_line(self.offset)
             try:
                 line.request(consumer="LoRaGpio", type=gpiod.LINE_REQ_EV_RISING_EDGE)
